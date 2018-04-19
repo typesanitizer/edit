@@ -17,17 +17,27 @@ flag comonad_instance
   default: False
   manual:  True
 
+flag uniplate_examples
+  description: Build the uniplate-based examples in the tutorial.
+  default: False
+  manual:  True
+
 library
   exposed-modules:     Data.Edit
-  build-depends:       base >=4.10 && <4.11
+                       Data.Edit.Tutorial
+  build-depends:       base    >= 4.10 && < 4.11
   ghc-options:         -Wall
                        -Wnoncanonical-monad-instances
                        -Wnoncanonical-monoid-instances
+                       -Wcompat
   hs-source-dirs:      src
   default-language:    Haskell2010
   if flag(comonad_instance)
     CPP-options:       -DWITH_COMONAD_INSTANCE
     build-depends:     comonad
+  if flag(uniplate_examples)
+    CPP-options:       -DUNIPLATE_EXAMPLES
+    build-depends:     uniplate >= 1.6 && < 1.7
 
 test-suite test-edit
   type:              exitcode-stdio-1.0
@@ -38,8 +48,9 @@ test-suite test-edit
                      Utils
   build-Depends:     base
                    , edit
+                   , doctest    >= 0.13 && < 0.15
                    , QuickCheck >= 2.11 && < 2.12
-                   , lens       >= 4.16 && < 4.17
+                   , uniplate   >= 1.16 && < 1.17
                    , comonad    >= 5.0  && < 5.1
   ghc-options:       -Wall -threaded
   default-language:  Haskell2010
