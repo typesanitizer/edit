@@ -1,0 +1,45 @@
+name:                edit
+version:             0.1.0.0
+synopsis:            A monad for rewriting things.
+homepage:            https://github.com/theindigamer/edit
+license:             BSD3
+license-file:        LICENSE
+author:              Varun Gandhi <theindigamer15@gmail.com>
+maintainer:          Varun Gandhi <theindigamer15@gmail.com>
+copyright:           Varun Gandhi 2018
+category:            Data
+build-type:          Simple
+extra-source-files:  ChangeLog.md
+cabal-version:       >=1.10
+
+flag comonad_instance
+  description: Adds comonad as a dependency to provide a Comonad instance.
+  default: False
+  manual:  True
+
+library
+  exposed-modules:     Data.Edit
+  build-depends:       base >=4.10 && <4.11
+  ghc-options:         -Wall
+                       -Wnoncanonical-monad-instances
+                       -Wnoncanonical-monoid-instances
+  hs-source-dirs:      src
+  default-language:    Haskell2010
+  if flag(comonad_instance)
+    CPP-options:       -DWITH_COMONAD_INSTANCE
+    build-depends:     comonad
+
+test-suite test-edit
+  type:              exitcode-stdio-1.0
+  hs-source-dirs:    tests
+  main-is:           Spec.hs
+  other-modules:     Imports
+                     SipHash
+                     Utils
+  build-Depends:     base
+                   , edit
+                   , QuickCheck >= 2.11 && < 2.12
+                   , lens       >= 4.16 && < 4.17
+                   , comonad    >= 5.0  && < 5.1
+  ghc-options:       -Wall -threaded
+  default-language:  Haskell2010

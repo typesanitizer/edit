@@ -1,0 +1,9 @@
+resolver: lts-11.5
+
+packages:
+- .
+
+# Override default flag values for local packages and extra-deps
+# flags:
+#   edit:
+#     comonad_instance: true
