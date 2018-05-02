@@ -54,15 +54,18 @@ library
 test-suite test-edit
   type:              exitcode-stdio-1.0
   hs-source-dirs:    tests
-  main-is:           Spec.hs
-  other-modules:     Imports
-                     SipHash
-                     Utils
+  main-is:           Driver.hs
+  other-modules:     Data.EditSpec
+                     Control.Monad.Trans.EditSpec
   build-Depends:     base
                    , edit
                    , doctest    >= 0.13 && < 0.15
-                   , QuickCheck >= 2.11 && < 2.12
-                   , uniplate   >= 1.16 && < 1.17
+                   , QuickCheck >= 2.10 && < 2.12
+                   , uniplate   >= 1.6 && < 1.7
                    , comonad    >= 5.0  && < 5.1
+                   , tasty      >= 1.0 && < 1.1
+                   , tasty-discover   >= 4.2 && < 4.3
+                   , tasty-quickcheck >= 0.9 && < 0.10
   ghc-options:       -Wall -threaded
   default-language:  Haskell2010
+
