@@ -22,8 +22,8 @@ flag comonad_instance
   default: False
   manual:  True
 
-flag uniplate_examples
-  description: Build the uniplate-based examples in the tutorial.
+flag tutorial
+  description: Build the tutorial. Adds dependencies on uniplate and containers.
   default: False
   manual:  True
 
@@ -47,9 +47,10 @@ library
   if flag(comonad_instance)
     CPP-options:       -DWITH_COMONAD_INSTANCE
     build-depends:     comonad
-  if flag(uniplate_examples)
-    CPP-options:       -DUNIPLATE_EXAMPLES
+  if flag(tutorial)
+    CPP-options:       -DTUTORIAL
     build-depends:     uniplate >= 1.6 && < 1.7
+                     , containers >= 0.5.8.1 && < 0.5.12
 
 test-suite test-edit
   type:              exitcode-stdio-1.0
