@@ -25,8 +25,12 @@ flag uniplate_examples
 library
   exposed-modules:     Data.Edit
                        Data.Edit.Tutorial
-  build-depends:       base    >= 4.10 && < 4.11
+                       Control.Monad.Trans.Edit
+  build-depends:       base    >= 4.9 && < 4.12
+                     , deepseq >= 1.1 && < 1.5
+                     , transformers >= 0.5 && < 0.6
   ghc-options:         -Wall
+                       -Wincomplete-uni-patterns
                        -Wnoncanonical-monad-instances
                        -Wnoncanonical-monoid-instances
                        -Wcompat
