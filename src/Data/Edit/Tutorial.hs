@@ -1,10 +1,31 @@
--- | This is a short tutorial describing how you can use the 'Data.Edit' module
--- to help you with writing rewriting code (!).
+-- |
+-- Module      :  Data.Edit
+-- Copyright   :  (c) Varun Gandhi 2018
+-- License     :  BSD-style (see the file LICENSE)
 --
+-- Maintainer  :  theindigamer15@gmail.com
+-- Stability   :  experimental
+-- Portability :  portable
+--
+-- This is a short tutorial describing how you can use the 'Data.Edit' module
+-- to help you with writing dataflow analysis code for a compiler.
+--
+-- __TL;DR:__
+--
+-- > import DataFlowLibrary
+-- > import PlatedLibrary
+-- >
+-- > instance FancyPlate Foo where ...
+-- > mkAwesome :: Foo -> Maybe Foo
+-- > mkTotallyAwesome :: Foo -> Edit Foo
+-- > mkTotallyAwesome = transformM (fromMaybe mkAwesome)
+-- > dataFlowAnalysis = dataFlowLibFn (toMaybe . mkTotallyAwesome)
+--
+-- __Start__:
 -- Some of the examples use the
 -- <https://github.com/ndmitchell/uniplate Uniplate> library. If you want to
 -- follow along as we proceed, you may want to supply the package flag
--- @uniplate_examples@ to be able to those bits of the code.
+-- @uniplate_examples@.
 --
 -- If you're testing inside a @cabal@ sandbox, this can be done using
 --
