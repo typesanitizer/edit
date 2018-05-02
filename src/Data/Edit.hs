@@ -10,13 +10,16 @@
 -- The 'Edit' type for working with rewriting systems, with associated
 -- operations.
 --
--- To see detailed examples, check the 'Data.Edit.Tutorial' module.
+-- To see a detailed example describing dataflow analysis in a compiler, check
+-- the 'Data.Edit.Tutorial' module.
 
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE DeriveFunctor #-}
-{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DeriveTraversable #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveAnyClass #-}
 
 module Data.Edit
   (
@@ -42,14 +45,22 @@ module Data.Edit
   )
   where
 
+#define MONOID_SUPERCLASS_OF_SEMIGROUP    MIN_VERSION_base(4,11,0)
+#define SEMIGROUP_EXPORTED_FROM_PRELUDE   MIN_VERSION_base(4,11,0)
+
 import Control.Applicative
+import Control.DeepSeq (NFData)
 import Control.Monad.Zip (MonadZip (..))
+import Data.Data (Typeable, Data)
 import Data.Either (partitionEithers)
-import Data.Semigroup (Semigroup (..))
-import GHC.Generics
+import Data.Functor.Classes
+import GHC.Generics (Generic)
 
 #ifdef WITH_COMONAD_INSTANCE
 import Control.Comonad
+#endif
+#if !SEMIGROUP_EXPORTED_FROM_PRELUDE
+import Data.Semigroup (Semigroup (..))
 #endif
 
 -- | The 'Edit' type encapsulates rewriting.
@@ -60,6 +71,24 @@ import Control.Comonad
 -- while rewriting, instead of, say re-computing it after the fact using an 'Eq'
 -- instance on the underlying data-type.
 --
+-- For example,
+--
+-- >>> halveEvens x = if x `mod` 2 == 0 then (Dirty $ x `div` 2) else (Clean x)
+-- >>> traverse halveEvens [1, 2, 3]
+-- Dirty [1,1,3]
+-- >>> traverse halveEvens [1, 3, 5]
+-- Clean [1,3,5]
+--
+-- To support this behaviour, the 'Applicative' and 'Monad' instances have
+-- "polluting" semantics:
+--
+-- 1. 'pure' = 'Clean' = 'return'.
+-- 2. The result of '<*>' is 'Clean' if and only if both the arguments are
+--    'Clean'.
+-- 3. If you bind a 'Clean' value, you may get anything depending on the
+--    function involved. However, if you bind a 'Dirty' value, you will
+--    definitely get a 'Dirty' value back.
+--
 -- If you're familiar with the Writer monad, 'Edit' is morally equivalent to
 -- a Writer monad where @w@ is isomorphic to 'Bool' with @(<>) = (||)@.
 --
@@ -69,27 +98,17 @@ import Control.Comonad
 -- instance, instead of just having the 'extract', 'duplicate' and 'extend'
 -- functions.
 --
--- The 'Applicative' and 'Monad' instances have "polluting" semantics:
---
--- 1. 'pure' = 'Clean' = 'return'.
--- 2. The result of '<*>' is 'Clean' if and only if both the arguments are
---    'Clean'.
--- 3. If you bind a 'Clean' value, you may get anything depending on the
---    function involved. However, if you bind a 'Dirty' value, you will
---    definitely get a 'Dirty' value back.
---
--- For example,
---
--- >>> halveEvens x = if x `mod` 2 == 0 then (Dirty $ x `div` 2) else (Clean x)
--- >>> traverse halveEvens [1, 2, 3]
--- Dirty [1,1,3]
--- >>> traverse halveEvens [1, 3, 5]
--- Clean [1,3,5]
+-- __Usage note:__ You probably want to import this module qualified to avoid
+-- a name conflict with "Data.Maybe"'s 'Data.Maybe.fromMaybe'.
 
 data Edit a
   = Dirty a -- ^ A value that has been modified.
   | Clean a -- ^ A value that has not been modified.
-  deriving (Show, Eq, Functor, Foldable, Traversable, Generic)
+  deriving
+    ( Eq, Show, Read
+    , Functor, Foldable, Traversable
+    , Generic, NFData, Typeable, Data
+    )
 
 instance Applicative Edit where
   pure = Clean
@@ -105,12 +124,29 @@ instance Monad Edit where
 instance Semigroup a => Semigroup (Edit a) where
   (<>) = liftA2 (<>)
 
+#if MONOID_SUPERCLASS_OF_SEMIGROUP
+instance Monoid a => Monoid (Edit a) where
+#else
 instance (Semigroup a, Monoid a) => Monoid (Edit a) where
+#endif
   mempty = Clean mempty
   mappend = (<>)
 
 instance MonadZip Edit where
   mzip = liftA2 (,)
+
+-- These instances have been adapted from Maybe's instances.
+instance Eq1 Edit where
+  liftEq eq ex ey = eq (extract ex) (extract ey)
+
+instance Show1 Edit where
+  liftShowsPrec sp _ d (Clean x) = showsUnaryWith sp "Clean" d x
+  liftShowsPrec sp _ d (Dirty x) = showsUnaryWith sp "Dirty" d x
+
+instance Read1 Edit where
+  liftReadPrec rp _ =
+    readData (readUnaryWith rp "Clean" Clean)
+    <|> readData (readUnaryWith rp "Dirty" Dirty)
 
 -- | Forcibly make the value 'Clean'.
 -- You probably do not want to use this function unless you're implementing
@@ -135,6 +171,11 @@ fromEdit = \case
 
 -- | Was an edit made (is the value 'Dirty')? If yes, returns 'Just' otherwise
 -- 'Nothing'.
+--
+-- >>> toMaybe (Clean "Good morning.")
+-- Nothing
+-- >>> toMaybe (Dirty "Wink, wink.")
+-- Just "Wink, wink."
 toMaybe :: Edit a -> Maybe a
 toMaybe = \case
   Clean _ -> Nothing
@@ -144,7 +185,6 @@ toMaybe = \case
 --
 -- >>> fromMaybe "Hi" Nothing
 -- Clean "Hi"
---
 -- >>> defaultValue = 1000
 -- >>> correctedValue = Just 1024
 -- >>> fromMaybe defaultValue correctedValue
@@ -164,14 +204,16 @@ edits f x = case f x of
   Nothing -> Clean x
 
 -- | A 'Dirty' value becomes a 'Left' and a 'Clean' value becomes a 'Right'.
--- (Mnemonic: have things clean is usually the right situation to be in).
+--
+-- Mnemonic: having things clean is usually the right situation to be in.
 toEither :: Edit a -> Either a a
 toEither = \case
   Dirty x -> Left x
   Clean x -> Right x
 
 -- | A 'Left' value becomes a 'Dirty' and a 'Right' value becomes a 'Clean'.
--- (Mnemonic: have things clean is usually the right situation to be in).
+--
+-- Mnemonic: having things clean is usually the right situation to be in.
 fromEither :: Either a a -> Edit a
 fromEither = \case
   Left x -> Dirty x
@@ -193,8 +235,14 @@ isDirty = \case
 instance Comonad Edit where
   extract = fromEdit
   duplicate = dup
+
+instance ComonadApply Edit where
+  (<@>) = (<*>)
+  ( @>) = ( *>)
+  (<@ ) = (<* )
+
 #elif 1
--- | @extract = fromEdit@. Provided purely for cosmetic reasons.
+-- | @extract = fromEdit@. Provided purely for cosmetic (aesthetic?) reasons.
 extract :: Edit a -> a
 extract = fromEdit
 
@@ -202,7 +250,9 @@ extract = fromEdit
 duplicate :: Edit a -> Edit (Edit a)
 duplicate = dup
 
--- | > extend f = fmap f . duplicate
+-- | Keep track of changes while utilizing an extraction map.
+--
+-- > extend f = fmap f . duplicate
 extend :: (Edit a -> b) -> Edit a -> Edit b
 extend f = fmap f . duplicate
 #endif
