@@ -62,6 +62,10 @@ import Control.Comonad
 #if !SEMIGROUP_EXPORTED_FROM_PRELUDE
 import Data.Semigroup (Semigroup (..))
 #endif
+#ifdef WITH_ARBITRARY_INSTANCE
+import Test.QuickCheck (Arbitrary (..), Arbitrary1 (..)
+                       , frequency, arbitrary1, shrink1)
+#endif
 
 -- | The 'Edit' type encapsulates rewriting.
 --
@@ -147,6 +151,18 @@ instance Read1 Edit where
   liftReadPrec rp _ =
     readData (readUnaryWith rp "Clean" Clean)
     <|> readData (readUnaryWith rp "Dirty" Dirty)
+
+#if defined(WITH_ARBITRARY_INSTANCE)
+instance Arbitrary1 Edit where
+  liftArbitrary arb = frequency [(1, Clean <$> arb), (3, Dirty <$> arb)]
+
+  liftShrink shr (Dirty x) = Clean x : liftShrink shr (Clean x) ++ [Dirty x' | x' <- shr x]
+  liftShrink shr (Clean x) = [Clean x' | x' <- shr x]
+
+instance Arbitrary a => Arbitrary (Edit a) where
+  arbitrary = arbitrary1
+  shrink = shrink1
+#endif
 
 -- | Forcibly make the value 'Clean'.
 -- You probably do not want to use this function unless you're implementing

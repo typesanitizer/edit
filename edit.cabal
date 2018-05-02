@@ -12,6 +12,11 @@ build-type:          Simple
 extra-source-files:  ChangeLog.md
 cabal-version:       >=1.10
 
+flag arbitrary_instance
+  description: Adds QuickCheck as a dependency to provide an Arbitrary instance.
+  default: False
+  manual:  True
+
 flag comonad_instance
   description: Adds comonad as a dependency to provide a Comonad instance.
   default: False
@@ -36,6 +41,9 @@ library
                        -Wcompat
   hs-source-dirs:      src
   default-language:    Haskell2010
+  if flag(arbitrary_instance)
+    CPP-options:       -DWITH_ARBITRARY_INSTANCE
+    build-depends:     QuickCheck >= 2.10 && < 2.12
   if flag(comonad_instance)
     CPP-options:       -DWITH_COMONAD_INSTANCE
     build-depends:     comonad
