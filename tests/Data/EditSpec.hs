@@ -1,18 +1,14 @@
-{-# LANGUAGE FlexibleInstances #-}
-
-{-# OPTIONS_GHC -fno-warn-orphans #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Data.EditSpec where
 
 import Data.Edit
-import Test.QuickCheck
+import Test.QuickCheck.Function
 
-instance Show (Integer -> Integer) where
-  show _ = "f :: Integer -> Integer"
-
-prop_EditApplicativeIdentity :: Edit Integer -> Bool
+prop_EditApplicativeIdentity :: Edit Int -> Bool
 prop_EditApplicativeIdentity v = (pure id <*> v) == v
 
 prop_EditApplicativeComposition
-  :: Edit (Integer -> Integer) -> Edit (Integer -> Integer) -> Edit Integer -> Bool
-prop_EditApplicativeComposition u v w = (pure (.) <*> u <*> v <*> w) == ((v <*> w))
+  :: Edit (Fun Int Int) -> Edit (Fun Int Int) -> Edit Int -> Bool
+prop_EditApplicativeComposition (fmap apply -> u) (fmap apply -> v) w
+  = (pure (.) <*> u <*> v <*> w) == (u <*> (v <*> w))
