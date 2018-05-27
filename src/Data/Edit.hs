@@ -45,6 +45,9 @@ module Data.Edit
   , fromEither
   -- * Operations with lists
   , partitionEdits
+  -- * Finding a fixed point
+  , polish
+  , iterations
   )
   where
 
@@ -57,6 +60,7 @@ import Control.Monad (ap)
 import Control.Monad.Zip (MonadZip (..))
 import Data.Data (Typeable, Data)
 import Data.Either (partitionEithers)
+import Data.List (unfoldr)
 import Data.Functor.Classes
 import GHC.Generics (Generic)
 
@@ -284,3 +288,41 @@ dup = \case
 -- > partitionEdits = partitionEithers . map toEither
 partitionEdits :: [Edit a] -> ([a], [a])
 partitionEdits = partitionEithers . map toEither
+
+-- | Keep editing till the result is 'Clean' (find the fixed point).
+--
+-- >>> g x = if x >= 10 then Clean x else Dirty (x + 2)
+-- >>> polish g 3
+-- 11
+--
+-- Conceptually,
+--
+-- > polish f x = last $ iterations f x
+polish :: (a -> Edit a) -> a -> a
+polish f x = case f x of
+  Clean y -> y
+  Dirty y -> polish f y
+
+-- | Keep editing till the result is 'Clean', recording iterations.
+--
+-- Similar to 'polish' but gets the entire list of arguments tested instead of
+-- just the final result. The result is guaranteed to be non-empty because
+-- the first element will always be included. If the list is finite, the last
+-- element gives a 'Clean' result.
+--
+-- >>> g x = if x >= 10 then Clean x else Dirty (x + 2)
+-- >>> iterations g 3
+-- [3,5,7,9,11]
+--
+-- This can be helpful in debugging your transformation function. For example,
+--
+-- @
+-- [ (before, after)
+-- | let xs = iterations f start
+-- , (before, after) <- zip xs (tail xs)
+-- , sanityCheck before && not (sanityCheck after))
+-- ]
+-- @
+iterations :: (a -> Edit a) -> a -> [a]
+iterations f = unfoldr (fmap g') . Just
+  where g' y = (y, toMaybe (f y))
