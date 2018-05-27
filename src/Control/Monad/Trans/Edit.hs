@@ -10,8 +10,8 @@
 -- A monad/comonad transformer for the 'Edit' monad.
 --
 -- I'm not entirely sure what this might be useful for, but it is provided for
--- the sake of completeness. If you find a concrete use case for it, get in
--- touch!
+-- the sake of completeness. If you find a concrete use case for it, please
+-- submit a PR on Github to fix this section!
 
 {-# LANGUAGE CPP #-}
 

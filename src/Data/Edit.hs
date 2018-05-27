@@ -10,8 +10,11 @@
 -- The 'Edit' type for working with rewriting systems, with associated
 -- operations.
 --
--- To see a detailed example describing dataflow analysis in a compiler, check
--- the 'Data.Edit.Tutorial' module.
+-- To see a high-level overview of some use cases and a detailed example,
+-- check the "Data.Edit.Tutorial" module.
+--
+-- __Usage note:__ You probably want to import this module qualified to avoid
+-- a name conflict with "Data.Maybe"'s 'Data.Maybe.fromMaybe'.
 
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE CPP #-}
@@ -50,6 +53,7 @@ module Data.Edit
 
 import Control.Applicative
 import Control.DeepSeq (NFData)
+import Control.Monad (ap)
 import Control.Monad.Zip (MonadZip (..))
 import Data.Data (Typeable, Data)
 import Data.Either (partitionEithers)
@@ -101,9 +105,6 @@ import Test.QuickCheck (Arbitrary (..), Arbitrary1 (..)
 -- <https://hackage.haskell.org/package/comonad-5.0.3/docs/Control-Comonad.html#t:Comonad Comonad>
 -- instance, instead of just having the 'extract', 'duplicate' and 'extend'
 -- functions.
---
--- __Usage note:__ You probably want to import this module qualified to avoid
--- a name conflict with "Data.Maybe"'s 'Data.Maybe.fromMaybe'.
 
 data Edit a
   = Dirty a -- ^ A value that has been modified.
@@ -116,10 +117,7 @@ data Edit a
 
 instance Applicative Edit where
   pure = Clean
-  Clean f <*> Clean x = Clean (f x)
-  Clean f <*> Dirty x = Dirty (f x)
-  Dirty f <*> Clean x = Dirty (f x)
-  Dirty f <*> Dirty x = Dirty (f x)
+  (<*>) = ap
 
 instance Monad Edit where
   Clean x >>= f = f x
@@ -154,11 +152,13 @@ instance Read1 Edit where
 
 #if defined(WITH_ARBITRARY_INSTANCE)
 instance Arbitrary1 Edit where
-  liftArbitrary arb = frequency [(1, Clean <$> arb), (3, Dirty <$> arb)]
+  liftArbitrary arb = frequency [(1, Clean <$> arb), (4, Dirty <$> arb)]
 
   liftShrink shr (Dirty x) = Clean x : liftShrink shr (Clean x) ++ [Dirty x' | x' <- shr x]
   liftShrink shr (Clean x) = [Clean x' | x' <- shr x]
 
+-- | 'arbitrary' is biased towards producing more 'Dirty' values. 'shrink'
+-- shrinks the generator towards 'Clean' values.
 instance Arbitrary a => Arbitrary (Edit a) where
   arbitrary = arbitrary1
   shrink = shrink1
@@ -178,8 +178,9 @@ dirty = Dirty . extract
 
 -- | Extract the final value after having done some edits.
 --
--- Unlike 'Data.Maybe.Maybe''s 'Data.Maybe.fromMaybe', this function doesn't require a
--- default value for totality as both constructors have a value in them.
+-- Unlike 'Data.Maybe.Maybe''s 'Data.Maybe.fromMaybe', this function doesn't
+-- require a default value for totality as both constructors have a value in
+-- them.
 fromEdit :: Edit a -> a
 fromEdit = \case
   Clean x -> x
@@ -258,7 +259,7 @@ instance ComonadApply Edit where
   (<@ ) = (<* )
 
 #elif 1
--- | @extract = fromEdit@. Provided purely for cosmetic (aesthetic?) reasons.
+-- | @extract = fromEdit@. Provided purely for aesthetic reasons.
 extract :: Edit a -> a
 extract = fromEdit
 

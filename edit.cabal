@@ -11,6 +11,12 @@ category:            Data
 build-type:          Simple
 extra-source-files:  ChangeLog.md
 cabal-version:       >=1.10
+description:
+   Edit is a monad for rewriting things.
+
+source-repository head
+ type:     git
+ location: https://github.com/theindigamer/edit.git
 
 flag arbitrary_instance
   description: Adds QuickCheck as a dependency to provide an Arbitrary instance.
