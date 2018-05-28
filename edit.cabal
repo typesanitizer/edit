@@ -1,5 +1,5 @@
 name:                edit
-version:             0.0.1.0
+version:             0.0.1.1
 synopsis:            A monad for rewriting things.
 homepage:            https://github.com/theindigamer/edit
 license:             BSD3
@@ -9,7 +9,7 @@ maintainer:          Varun Gandhi <theindigamer15@gmail.com>
 copyright:           Varun Gandhi 2018
 category:            Data
 build-type:          Simple
-extra-source-files:  ChangeLog.md
+extra-source-files:  ChangeLog.md, Readme.md
 cabal-version:       >=1.10
 description:
    Edit is a monad for rewriting things.
