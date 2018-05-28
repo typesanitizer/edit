@@ -1,5 +1,5 @@
 name:                edit
-version:             0.1.0.0
+version:             0.0.1.0
 synopsis:            A monad for rewriting things.
 homepage:            https://github.com/theindigamer/edit
 license:             BSD3
