@@ -13,8 +13,12 @@
 -- To see a high-level overview of some use cases and a detailed example,
 -- check the "Data.Edit.Tutorial" module.
 --
--- __Usage note:__ You probably want to import this module qualified to avoid
--- a name conflict with "Data.Maybe"'s 'Data.Maybe.fromMaybe'.
+-- __Usage notes:__
+--
+--   1. You probably want to import this module qualified to avoid a name
+--      collision with "Data.Maybe"'s 'Data.Maybe.fromMaybe'.
+--   2. We re-export the composition operators from "Control.Monad" for
+--      convenience.
 
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE CPP #-}
@@ -34,29 +38,33 @@ module Data.Edit
   , extract
   , duplicate
   , extend
-  -- * Forceful conversions
-  , clean
-  , dirty
   -- * Conversions to and from base types
   , toMaybe
   , fromMaybe
   , edits
   , toEither
   , fromEither
-  -- * Operations with lists
-  , partitionEdits
   -- * Finding a fixed point
   , polish
   , iterations
+  -- * Operations with lists
+  , partitionEdits
+  -- * Forceful conversions
+  , clean
+  , dirty
+  -- * Re-exports from "Control.Monad"
+  , (>=>)
+  , (<=<)
   )
   where
 
 #define MONOID_SUPERCLASS_OF_SEMIGROUP    MIN_VERSION_base(4,11,0)
 #define SEMIGROUP_EXPORTED_FROM_PRELUDE   MIN_VERSION_base(4,11,0)
+#define LIFTREADPREC_IN_READ1             MIN_VERSION_base(4,10,0)
 
 import Control.Applicative
 import Control.DeepSeq (NFData)
-import Control.Monad (ap)
+import Control.Monad ((>=>), (<=<), ap)
 import Control.Monad.Zip (MonadZip (..))
 import Data.Data (Typeable, Data)
 import Data.Either (partitionEithers)
@@ -101,7 +109,7 @@ import Test.QuickCheck (Arbitrary (..), Arbitrary1 (..)
 --    function involved. However, if you bind a 'Dirty' value, you will
 --    definitely get a 'Dirty' value back.
 --
--- If you're familiar with the Writer monad, 'Edit' is morally equivalent to
+-- If you're familiar with the Writer monad, 'Edit' is equivalent to
 -- a Writer monad where @w@ is isomorphic to 'Bool' with @(<>) = (||)@.
 --
 -- If you like comonads, you can use the @comonad_instance@ package flag to,
@@ -124,6 +132,7 @@ instance Applicative Edit where
   (<*>) = ap
 
 instance Monad Edit where
+  return = pure
   Clean x >>= f = f x
   Dirty x >>= f = dirty (f x)
 
@@ -149,10 +158,18 @@ instance Show1 Edit where
   liftShowsPrec sp _ d (Clean x) = showsUnaryWith sp "Clean" d x
   liftShowsPrec sp _ d (Dirty x) = showsUnaryWith sp "Dirty" d x
 
+-- Mimicking Maybe's Read1 instance.
+#if LIFTREADPREC_IN_READ1
 instance Read1 Edit where
   liftReadPrec rp _ =
     readData (readUnaryWith rp "Clean" Clean)
     <|> readData (readUnaryWith rp "Dirty" Dirty)
+#else
+instance Read1 Edit where
+  liftReadsPrec rp _ d =
+    readsData (readsUnaryWith rp "Clean" Clean) d
+    `mappend` readsData (readsUnaryWith rp "Dirty" Dirty) d
+#endif
 
 #if defined(WITH_ARBITRARY_INSTANCE)
 instance Arbitrary1 Edit where
