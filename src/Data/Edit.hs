@@ -109,8 +109,8 @@ import Test.QuickCheck (Arbitrary (..), Arbitrary1 (..)
 --    function involved. However, if you bind a 'Dirty' value, you will
 --    definitely get a 'Dirty' value back.
 --
--- If you're familiar with the Writer monad, 'Edit' is equivalent to
--- a Writer monad where @w@ is isomorphic to 'Bool' with @(<>) = (||)@.
+-- If you're familiar with the Writer monad, 'Edit' is isomorphic to
+-- @Writer Any@ ('Data.Monoid.Any' is 'Bool' with @(<>) = (||)@).
 --
 -- If you like comonads, you can use the @comonad_instance@ package flag to,
 -- erm, get a legit

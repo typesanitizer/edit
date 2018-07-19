@@ -143,11 +143,12 @@ or not, and feed the result to some high-level dataflow analysis function.
 -- follow along as we proceed, you will want to supply the package flag
 -- @tutorial@ and maybe read the docs in your browser.
 --
--- If you're testing inside a @cabal@ sandbox, this can be done using
+-- If you're using @cabal@, this can be done using
+-- (tested using @cabal-install@ 2.0.0.1):
 --
--- > cabal configure --flags="tutorial"
--- > cabal build
--- > cabal haddock
+-- > cabal new-configure --flags="tutorial"
+-- > cabal new-build
+-- > cabal new-haddock
 --
 -- If you're using @stack@, the same can be done using:
 --
