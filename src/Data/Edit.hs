@@ -111,12 +111,6 @@ import Test.QuickCheck (Arbitrary (..), Arbitrary1 (..)
 --
 -- If you're familiar with the Writer monad, 'Edit' is isomorphic to
 -- @Writer Any@ ('Data.Monoid.Any' is 'Bool' with @(<>) = (||)@).
---
--- If you like comonads, you can use the @comonad_instance@ package flag to,
--- erm, get a legit
--- <https://hackage.haskell.org/package/comonad-5.0.3/docs/Control-Comonad.html#t:Comonad Comonad>
--- instance, instead of just having the 'extract', 'duplicate' and 'extend'
--- functions.
 
 data Edit a
   = Dirty a -- ^ A value that has been modified.
