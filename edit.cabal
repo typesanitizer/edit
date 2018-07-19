@@ -19,12 +19,12 @@ source-repository head
  location: https://github.com/theindigamer/edit.git
 
 flag no_arbitrary
-  description: Adds QuickCheck as a dependency to provide an Arbitrary instance.
+  description: Removes QuickCheck as a dependency (so no Arbitray instance is provided).
   default: False
   manual:  True
 
 flag no_comonad
-  description: Adds comonad as a dependency to provide a Comonad instance.
+  description: Removes comonad as a dependency (so no Comonad instance is provided).
   default: False
   manual:  True
 
