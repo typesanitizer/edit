@@ -1,4 +1,4 @@
-# Edit [![Hackage badge](https://img.shields.io/hackage/v/edit.svg?label=Hackage)](https://hackage.haskell.org/package/edit)
+# Edit [![Hackage badge](https://img.shields.io/hackage/v/edit.svg?label=Hackage)](https://hackage.haskell.org/package/edit) [![Stackage badge](https://www.stackage.org/package/edit/badge/nightly?label=Stackage)](https://www.stackage.org/package/edit)
 
 The `Edit` monad allows you to easily bubble up whether a change was made or
 not when rewriting things. Some cases where this can be handy:
