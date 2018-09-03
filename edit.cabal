@@ -1,5 +1,5 @@
 name:                edit
-version:             1.0.0.0
+version:             1.0.1.0
 synopsis:            A monad for rewriting things.
 homepage:            https://github.com/theindigamer/edit
 license:             BSD3
@@ -19,7 +19,7 @@ source-repository head
  location: https://github.com/theindigamer/edit.git
 
 flag no_arbitrary
-  description: Removes QuickCheck as a dependency (so no Arbitray instance is provided).
+  description: Removes QuickCheck as a dependency (so no Arbitrary instance is provided).
   default: False
   manual:  True
 
@@ -49,7 +49,7 @@ library
   default-language:    Haskell2010
   if !flag(no_arbitrary)
     CPP-options:       -DWITH_ARBITRARY_INSTANCE
-    build-depends:     QuickCheck >= 2.10 && < 2.12
+    build-depends:     QuickCheck >= 2.10 && < 2.13
   if !flag(no_comonad)
     CPP-options:       -DWITH_COMONAD_INSTANCE
     build-depends:     comonad
@@ -67,7 +67,7 @@ test-suite test-edit
   build-Depends:     base
                    , edit
                    , doctest    >= 0.13 && < 0.17
-                   , QuickCheck >= 2.10 && < 2.12
+                   , QuickCheck >= 2.10 && < 2.13
                    , uniplate   >= 1.6 && < 1.7
                    , comonad    >= 5.0  && < 5.1
                    , tasty      >= 1.0 && < 1.2
